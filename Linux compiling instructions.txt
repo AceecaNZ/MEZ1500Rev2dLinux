@@ -1,0 +1,75 @@
+I've changed the build system so that the kernel dir stays nice and clean for easier backup.
+The important thing to remember is to always be in the kernel dir and to always use O=../kernel-bin/ in each command.
+
+
+
+Start here
+~~~~~~~~~~
+cd to the kernel dir
+cd /opt/Aceeca/Linux/MEZ1500/rev2c/kernel/linux-2.6.32.2
+cd /opt/Aceeca/Linux/PDA32/rev0b/kernel/linux-2.6.32.2
+
+
+To compile kernel
+~~~~~~~~~~~~~~~~~
+cd to the kernel dir
+cd /opt/Aceeca/Linux/MEZ1500/rev2c/kernel/linux-2.6.32.2
+cd /opt/Aceeca/Linux/PDA32/rev0b/kernel/linux-2.6.32.2
+
+If we don't have .config then:
+make O=../kernel-bin/ MEZ1500_defconfig
+make O=../kernel-bin/ PDA32_defconfig
+
+If you already have a .config then you can now copy it to /kernel-bin
+
+To run menuconfig:
+make O=../kernel-bin/ menuconfig
+
+
+Compile the kernel:
+make O=../kernel-bin/ zImage
+
+Note: uboot only knows about uImage so need to use mkimage from uboot dir like this:
+/opt/Aceeca/Linux/MEZ1500/rev2c/uboot-1.3.2/tools/mkimage -A arm -O linux -T kernel -C none -a 0x30008000 -e 0x30008000 -d ../kernel-bin/arch/arm/boot/zImage ../kernel-bin/arch/arm/boot/uImage
+/opt/Aceeca/Linux/PDA32/rev0b/uboot-1.3.2/tools/mkimage -A arm -O linux -T kernel -C none -a 0x30008000 -e 0x30008000 -d ../kernel-bin/arch/arm/boot/zImage ../kernel-bin/arch/arm/boot/uImage
+
+Or alternatively, stick it straight into you tftboot dir: But we don't have ethernet :(
+/opt/Aceeca/Linux/MEZ1500/rev2c/uboot-1.3.2/tools/mkimage -A arm -O linux -T kernel -C none -a 0x30008000 -e 0x30008000 -d ../kernel-bin/arch/arm/boot/zImage /tftpboot/uImage
+/opt/Aceeca/Linux/PDA32/rev0b/uboot-1.3.2/tools/mkimage -A arm -O linux -T kernel -C none -a 0x30008000 -e 0x30008000 -d ../kernel-bin/arch/arm/boot/zImage /tftpboot/uImage
+
+
+To compile modules
+~~~~~~~~~~~~~~~~~~
+make O=../kernel-bin/ modules
+make O=../kernel-bin/ modules_install INSTALL_MOD_PATH=/opt/Aceeca/Linux/MEZ1500/rev2c/rootfs_qtopia_qt4
+make O=../kernel-bin/ modules_install INSTALL_MOD_PATH=/opt/Aceeca/Linux/PDA32/rev0b/rootfs_qtopia_qt4
+
+
+Other commands
+~~~~~~~~~~~~~~
+cd to the kernel dir
+root@vmlinuxbox:~# cd /opt/Aceeca/Linux/MEZ1500/rev2c/kernel/linux-2.6.32.2
+root@vmlinuxbox:~# cd /opt/Aceeca/Linux/PDA32/rev0b/kernel/linux-2.6.32.2
+
+make O=../kernel-bin/ clean
+
+mrproper
+
+
+Resources:
+http://wiki.linuxmce.org/index.php/Mini2440
+
+
+
+
+make O=../kernel-bin/ mrproper
+
+
+
+CROSS_COMPILE=arm-none-linux-gnueabi- ARCH=arm make O=../kernel-bin/ zImage
+
+
+
+
+
+make O=../kernel-bin/ modules_install INSTALL_MOD_PATH=/test
