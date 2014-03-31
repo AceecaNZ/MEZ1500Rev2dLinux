@@ -32,6 +32,10 @@
 #include <part.h>
 #include <fat.h>
 
+// 2014-03-28 SV: Added for ROM update.
+ulong g_size_rw_fsload;
+
+
 
 int do_fat_fsload (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
@@ -76,6 +80,11 @@ int do_fat_fsload (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		printf("\n** Unable to read \"%s\" from %s %d:%d **\n",argv[4],argv[1],dev,part);
 		return 1;
 	}
+
+// 2014-03-28 SV: Added for ROM update.
+// Store size in global variable.
+	g_size_rw_fsload = size;
+
 
 	printf ("\n%ld bytes read\n", size);
 

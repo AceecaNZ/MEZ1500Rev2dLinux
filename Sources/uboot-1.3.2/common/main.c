@@ -102,9 +102,325 @@ extern char *preboot_override;
 
 
 #include <s3c2440.h>
+
+
+
+// 2010-03-26 SV: Added for ROM update.
+#define UInt8		uint8_t
+#define UInt16	uint16_t
+#define UInt32	uint32_t
+
+#include <Garnet_S3C2440_lcd.h>
+
 extern void HALDelay(uint32_t microseconds);
+
+extern ulong g_size_rw_fsload;
+extern ulong g_size_rw_nand;
+
+extern void DisplayPicture(UInt16 *bmpPtr, int xPos, int yPos, int xSize, int ySize, int xOffset, int yOffset);
+extern const unsigned char bmpLoading[];
+extern const unsigned char bmpUpdatingROM[];
+extern const unsigned char bmpFailed[];
+
+extern const unsigned char bmpFont[];
+
+
 int LeftSideBtnPressed, RightSideBtnPressed, BacklightBtnPressed;
 
+extern ulong g_size_rw_fsload;
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+#include <version.h>	
+
+#define COMPILE_HOUR (((__TIME__[0]-'0')*10) + (__TIME__[1]-'0'))
+#define COMPILE_MINUTE (((__TIME__[3]-'0')*10) + (__TIME__[4]-'0'))
+#define COMPILE_SECOND (((__TIME__[6]-'0')*10) + (__TIME__[7]-'0'))
+
+
+
+
+#define YEAR ((((__DATE__ [7]-'0')*10+(__DATE__ [8]-'0'))*10+(__DATE__ [9]-'0'))*10+(__DATE__ [10]-'0'))
+
+/* Month: 0 - 11 */
+#define MONTH (__DATE__ [2] == 'n' ? (__DATE__ [1] == 'a' ? 0 : 5) \
+	            : __DATE__ [2] == 'b' ? 1 \
+              : __DATE__ [2] == 'r' ? (__DATE__ [0] == 'M' ? 2 : 3) \
+              : __DATE__ [2] == 'y' ? 4 \
+              : __DATE__ [2] == 'l' ? 6 \
+              : __DATE__ [2] == 'g' ? 7 \
+              : __DATE__ [2] == 'p' ? 8 \
+              : __DATE__ [2] == 't' ? 9 \
+              : __DATE__ [2] == 'v' ? 10 : 11)
+
+#define DAY ((__DATE__ [4]==' ' ? 0 : __DATE__ [4]-'0')*10+(__DATE__[5]-'0'))
+
+
+unsigned char GetCompileHour(void)
+{
+  unsigned char hour=COMPILE_HOUR;
+  return(hour);
+}
+
+unsigned char GetCompileMinute(void)
+{
+  unsigned char minute=COMPILE_MINUTE;
+  return(minute);
+}
+
+unsigned char GetCompileSecond(void)
+{
+  unsigned char second=COMPILE_SECOND;
+  return(second);
+}
+
+unsigned short GetCompileYear(void)
+{
+  unsigned short year=YEAR;
+  return(year);
+}
+
+unsigned char GetCompileMonth(void)
+{
+  unsigned short month=MONTH;
+  return(month + 1);
+}
+
+unsigned char GetCompileDay(void)
+{
+  unsigned short day=DAY;
+  return(day);
+}
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+
+
+
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//
+//#include <stdarg.h>
+
+#define BMP_FONT_IMG_WIDTH		128
+#define BMP_FONT_IMG_HEIGHT		78
+
+#define BMP_FONT_CELL_WIDTH		8
+#define BMP_FONT_CELL_HEIGHT	13
+
+#define BMP_FONT_CELL_SPACING	8
+#define BMP_FONT_LINE_SPACING	13
+
+#define BMP_FONT_1ST_CHAR			32	// 0x20 ' '
+#define BMP_FONT_LST_CHAR			127	// 0x7F
+
+#define BMP_FONT_TOTAL_CHARS	(BMP_FONT_IMG_WIDTH * BMP_FONT_IMG_HEIGHT) / (BMP_FONT_CELL_WIDTH * BMP_FONT_CELL_HEIGHT)
+
+#define BMP_FONT_NUM_COLS			BMP_FONT_IMG_WIDTH / BMP_FONT_CELL_WIDTH
+#define BMP_FONT_NUM_ROWS			BMP_FONT_IMG_HEIGHT / BMP_FONT_CELL_HEIGHT
+
+int lcd_x1, lcd_y1, lcd_x2, lcd_y2;
+
+int lcd_CallBack_EN = 0;
+
+//-----------------------------------------------------------------------------
+//
+void lcd_Putc(char ch)
+{
+// A pointer to the font image.	
+	UInt16* Font16Ptr;
+	
+// Somewhere to build the char image.	
+	UInt16 bmp_char[BMP_FONT_CELL_WIDTH *  BMP_FONT_CELL_HEIGHT];
+	
+	int bmp_char_index = 0;
+	
+	int	x, start, end, row, col;
+	
+// Don't try to display a char that isn't there.
+	if((ch < BMP_FONT_1ST_CHAR) || (ch >  BMP_FONT_LST_CHAR))
+		return;
+
+// Calc row & col
+	row = (int)((int)(ch - BMP_FONT_1ST_CHAR) / (int)(BMP_FONT_NUM_COLS));
+	col = (int)((int)(ch - BMP_FONT_1ST_CHAR) - (int)(row * (int)(BMP_FONT_NUM_COLS)));
+
+// Point to the correct row within the bmp
+	Font16Ptr = ((UInt16*) bmpFont) + ((BMP_FONT_IMG_WIDTH * BMP_FONT_CELL_HEIGHT) * row);
+	
+// Calculate trigger points.
+	start = col * BMP_FONT_CELL_WIDTH;	
+	end   = start + BMP_FONT_CELL_WIDTH;	
+	
+// Transfer the data we want
+	for(x = 0; x < (int)(BMP_FONT_IMG_WIDTH * BMP_FONT_CELL_HEIGHT); x++)
+	{
+		if((x >= start) && (x < end))
+		{
+			bmp_char[bmp_char_index] = *Font16Ptr;
+			bmp_char_index++;
+		}
+		
+		Font16Ptr++;
+		
+		if(x >= end)
+		{
+			// Re-calculate trigger points.
+			start += (int)((int)(BMP_FONT_CELL_WIDTH) * (int)(BMP_FONT_NUM_COLS));
+			end = start + BMP_FONT_CELL_WIDTH;
+		}
+	}
+	
+	DisplayPicture(bmp_char, LCD_XSIZE/2, LCD_YSIZE/2, BMP_FONT_CELL_WIDTH, BMP_FONT_CELL_HEIGHT, -LCD_XSIZE/2 + lcd_x2, -LCD_YSIZE/2 + lcd_y2);
+}
+//-----------------------------------------------------------------------------
+//
+void lcd_GotoXY(int x, int y)
+{
+	lcd_x1 = x;
+	lcd_x2 = x;
+	lcd_y1 = y;
+	lcd_y2 = y;
+}
+//-----------------------------------------------------------------------------
+//
+void lcd_Puts(const char *s)
+{
+	printf("%s\n", s);
+	
+// Centre justify
+	lcd_x2 = lcd_x1 - ((strlen(s)/2) * BMP_FONT_CELL_SPACING);
+	
+	while(*s)
+	{
+		if(*s == '\r')
+		{
+			//lcd_x2 = lcd_x1;
+			s++;
+			continue;
+		}	
+
+		if(*s == '\n')
+		{
+			lcd_y2 += (int)(BMP_FONT_LINE_SPACING);
+			//lcd_x2 = lcd_x1;
+			s++;
+			continue;
+		}	
+
+		lcd_Putc(*s);
+		lcd_x2 += (int)(BMP_FONT_CELL_SPACING);
+		s++;
+	}
+}
+//-----------------------------------------------------------------------------
+// Called from nand R & W
+//
+void lcd_CallBack(int flg, int value)
+{
+	char str[CFG_CBSIZE];
+	
+	if(!lcd_CallBack_EN) 
+		return;
+	
+	switch(flg)
+	{
+		case 1:
+			sprintf(str, "Loading: %d%%\r", value);
+			break;
+			
+		case 2:
+			sprintf(str, " Writing: %d%%\r", value);
+			break;
+	}
+	
+	lcd_Puts(str);
+}
+//-----------------------------------------------------------------------------
+//
+// Formatting needs some work.
+/*
+void lcd_printf(char *s, ...)
+{
+	char str[CFG_CBSIZE];
+	
+	va_list 	args;
+	
+	va_start(args, s);
+  sprintf(str, s, args);
+  va_end(args);
+
+	lcd_Puts(str);
+}
+*/
+//-----------------------------------------------------------------------------
+//
+void lcd_uboot_timestamp(void)
+{
+	char outstr[64];
+	char uboot_version[64];
+	char *p;
+
+// Get rid of the MEZ1500 garbage	
+	strcpy(uboot_version, U_BOOT_VERSION);
+	p = strstr(uboot_version, "-");
+	if(p)p = strstr(p+1, "-");
+	if(p)*p = 0;	
+
+	sprintf(outstr, "%s %d%.2d%.2d%.2d%.2d\n", uboot_version, GetCompileYear(), GetCompileMonth(), GetCompileDay(), GetCompileHour(), GetCompileMinute());
+	lcd_Puts(outstr);
+
+// Also place a copy in memory for Garnet DeviceInfo app	
+	p = (char *)0x33200000;		
+	
+	strcpy(p, outstr);
+}
+//-----------------------------------------------------------------------------
+//
+void ClrSDRAM(unsigned int memaddr, unsigned int size)
+{
+	unsigned int *p;
+	
+	p = (unsigned int *)memaddr;
+	
+	size /= 4;
+	
+	while(size)
+	{
+		*p = 0;
+		p++;
+		size--;
+	}
+}
+//-----------------------------------------------------------------------------
+//
+void DbugPin(int state)
+{
+	S3C24X0_GPIO * const gpioP = S3C24X0_GetBase_GPIO();
+	
+	if(state)
+		gpioP->GPGDAT |= (1 << 2);
+	else
+		gpioP->GPGDAT &= ~(1 << 2);
+}
+//-----------------------------------------------------------------------------
+
+unsigned int ChargerAdapterConnected(void)
+{
+	S3C24X0_GPIO * const gpioP = S3C24X0_GetBase_GPIO();
+	
+	if(gpioP->GPBDAT & (1 << 10))
+		return 0;
+	else
+		return 1;
+}
+//-----------------------------------------------------------------------------
 
 
 
@@ -404,6 +720,99 @@ static __inline__ int abortboot(int bootdelay)
 //-----------------------------------------------------------------------------
 #endif
 
+
+
+
+
+
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+// Ported from Garnet code.
+
+#include <Garnet_sysdefs.h>
+#include <Garnet_S3C2440_adc.h>
+
+extern void HALDelay(uint32_t microseconds);
+
+
+#define BATT_SAFE_LEVEL	601			 // 6.2V (batt) * (100K/320K) * 1024 / (Vdd = 3.3V)
+
+#define bv_chan		ADCCONch0
+
+UInt16 ReadADC(UInt8 chan)
+{
+	volatile HwrS3C2440_ADC_RegPtr adcP = (HwrS3C2440_ADC_RegPtr)S3C2440_ADC_BASE;
+
+	UInt16 data;
+
+//	gpioP->GPJDAT |= bGPJDAT_ADC_ENABLE;	// enable battery monitor circuit
+
+	adcP->ADCDLY = 250;	
+	adcP->ADCCON = (bADCCONstdby | (ADCCON_PRSCVL_bv << 6) | (chan << 3));	
+	adcP->ADCCON |= bADCCONprscen;			// then enable the prescaler
+	HALDelay(3);												// wait min. 3 ADC clocks
+	adcP->ADCCON &= ~bADCCONstdby;			// before switching from stdby to normal operation
+
+	// Start the ADC conversion (after programmed delay)
+	adcP->ADCCON |= bADCCONenStart;
+
+	// Wait for end of conversion
+	while (!(adcP->ADCCON & bADCCONecflg));
+
+	data = (adcP->ADCDAT0 & 0x3FF);				// raw, 10-bit
+	
+	// Put ADC into standby mode
+	adcP->ADCCON |= bADCCONstdby;
+
+//	gpioP->GPJDAT &= ~bGPJDAT_ADC_ENABLE;		// disable battery monitor circuit
+
+	return data;	
+}
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+
+
+
+// ----------------------------------------------------------------------------
+//
+//	Verify the checksum of entire ROM
+// The sum of all words, including the csum word, should be 0
+unsigned int DoROMcsum (void)
+{
+#define		RAM_START_ADDR			0x33240000
+#define  	UBOOT_SIZE_ADDR    	0x33240054		// length of ROM in bytes
+	
+	
+	UInt32	*pROM;
+	UInt32	size, csum, i;
+	
+	pROM = (UInt32 *)UBOOT_SIZE_ADDR;
+	
+	size = (*pROM) >> 2;			// convert from bytes to words
+
+	pROM = (UInt32	*)RAM_START_ADDR;				// point to start of ROM
+	csum = 0;
+	for (i=0; i<size; i++)
+			csum += *pROM++;
+
+	if(csum == 0)
+		printf("Checksum Ok!\n"	);
+	else
+		printf("Checksum bad!\n");
+
+	return (csum == 0);
+}
+
+
+
+
+
 /****************************************************************************/
 
 void main_loop (void)
@@ -549,6 +958,28 @@ void main_loop (void)
 
 
 
+
+
+
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+		//run_command (s, 0);
+
+// 2010-03-26 SV: Added for ROM update.
+
+// Some debug.
+	printf("\nRaw batt level = %d\n", ReadADC(bv_chan));
+	
+// Start displaying here...	
+	lcd_GotoXY(LCD_XSIZE/2, 150);
+	
+	lcd_uboot_timestamp();
+
+/*
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -559,9 +990,9 @@ void main_loop (void)
 	{
 			printf("UPDATE UBOOT FROM SD CARD...\n");
 			run_command ("mmcinit", 0);
-			run_command ("fatload mmc 0:1 0x31000000 mez1500_rev2c_uboot.bin", 0);
+			run_command ("fatload mmc 0:1 0x33240000 mez1500_rev2d_uboot.bin", 0);
 			run_command ("nand erase u-boot", 0);
-			run_command ("nand write 0x31000000 u-boot", 0);
+			run_command ("nand write 0x33240000 0", 0);
 			reset_cpu(0);
 	}
 	
@@ -569,13 +1000,56 @@ void main_loop (void)
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+*/
 
 
+//.............................................................................
+//
+// Update uboot?
 
+	if(LeftSideBtnPressed && RightSideBtnPressed)
+	{
+		if(ReadADC(bv_chan) >= BATT_SAFE_LEVEL || ChargerAdapterConnected())
+		{	
+			lcd_Puts("Updating all if found\n");
+			
+			run_command ("mmcinit", 0);
+			
+			lcd_Puts("Read uboot bin:\n");
+  		lcd_Puts("mez1500_rev2d_uboot.bin\n");					
+  		
+  		ClrSDRAM(0x33240000, 0x400000);
+			
+			g_size_rw_fsload = 0;
+			run_command ("fatload mmc 0:1 0x33240000 mez1500_rev2d_uboot.bin", 0);
+			
+			if(g_size_rw_fsload && DoROMcsum())
+			{
+				char str[128];
+				lcd_Puts("Write uboot bin to nand.\n");					
+				run_command ("nand erase u-boot", 0);
+				sprintf(str,"nand write.e 0x33240000 0 0x%x", g_size_rw_fsload);
+				run_command (str, 0);
+				//run_command ("nand write 0x33240000 0", 0);
+				
+				run_command ("reset", 0);
+			}
+			else
+			{
+				lcd_Puts("No bin found on sdcard!\n");
+			}
+		}
+		else
+		{
+			lcd_Puts("Update FAILED!\n");
+			lcd_Puts("Battery voltage too low!\n");
+		}
+	}
+	
+//.............................................................................
 
-
-
-
+	lcd_Puts("\n");
+	lcd_Puts("* Booting kernel *\n");
 
 
 # ifndef CFG_HUSH_PARSER

@@ -89,6 +89,8 @@ extern void rtl8019_get_enetaddr (uchar * addr);
 #include <i2c.h>
 #endif
 
+extern void board_video_init(void); 
+
 /*
  * Begin and End of memory area for malloc(), and current "brk"
  */
@@ -476,6 +478,10 @@ extern int eth_set_mac(bd_t * bd);
 		*pSDRAM = 0x11;
 	}
 */
+
+
+// 2014-03-28 SV: Added
+	board_video_init();
 
 
 

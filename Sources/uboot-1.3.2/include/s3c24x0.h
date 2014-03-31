@@ -31,6 +31,8 @@
 #ifndef __S3C24X0_H__
 #define __S3C24X0_H__
 
+#include <linux/mtd/nand.h>
+
 typedef volatile u8	S3C24X0_REG8;
 typedef volatile u16	S3C24X0_REG16;
 typedef volatile u32	S3C24X0_REG32;
@@ -209,7 +211,7 @@ typedef struct {
 	S3C24X0_REG32	UBRDIV;
 } /*__attribute__((__packed__))*/ S3C24X0_UART;
 
-
+#if 0
 /* PWM TIMER (see manual chapter 10) */
 typedef struct {
 	S3C24X0_REG32	TCNTB;
@@ -224,6 +226,29 @@ typedef struct {
 	S3C24X0_TIMER	ch[4];
 	S3C24X0_REG32	TCNTB4;
 	S3C24X0_REG32	TCNTO4;
+} /*__attribute__((__packed__))*/ S3C24X0_TIMERS;
+#endif
+
+
+typedef struct  {
+    S3C24X0_REG32 TCFG0;	// 0x51000000  Timer configuration      
+    S3C24X0_REG32 TCFG1;	// 0x51000004  Timer configuration      
+    S3C24X0_REG32 TCON;		// 0x51000008  Timer control            
+    S3C24X0_REG32 TCNTB0;	// 0x5100000C  Timer count buffer 0     
+    S3C24X0_REG32 TCMPB0;	// 0x51000010  Timer compare buffer 0   
+    S3C24X0_REG32 TCNTO0;	// 0x51000014  Timer count observation 0
+    S3C24X0_REG32 TCNTB1;	// 0x51000018  Timer count buffer 1     
+    S3C24X0_REG32 TCMPB1;	// 0x5100001C  Timer compare buffer 1   
+    S3C24X0_REG32 TCNTO1;	// 0x51000020  Timer count observation 1
+    S3C24X0_REG32 TCNTB2;	// 0x51000024  Timer count buffer 2     
+    S3C24X0_REG32 TCMPB2;	// 0x51000028  Timer compare buffer 2   
+    S3C24X0_REG32 TCNTO2;	// 0x5100002C  Timer count observation 2
+    S3C24X0_REG32 TCNTB3;	// 0x51000030  Timer count buffer 3     
+    S3C24X0_REG32 TCMPB3;	// 0x51000034  Timer compare buffer 3   
+    S3C24X0_REG32 TCNTO3;	// 0x51000038  Timer count observation 3
+    S3C24X0_REG32 TCNTB4;	// 0x5100003C  Timer count buffer 4     
+    S3C24X0_REG32 TCNTO4;	// 0x51000040  Timer count observation 4
+    
 } /*__attribute__((__packed__))*/ S3C24X0_TIMERS;
 
 

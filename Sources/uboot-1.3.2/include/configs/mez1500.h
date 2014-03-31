@@ -42,7 +42,7 @@
 #define CONFIG_S3C2410_NAND_BOOT	1
 #define CONFIG_S3C2410_NAND_SKIP_BAD	1
 
-#define CFG_UBOOT_SIZE		0x40000 /* size of u-boot, for NAND loading */
+#define CFG_UBOOT_SIZE		0x60000 /* size of u-boot, for NAND loading */
 
 /*
  * High Level Configuration Options
@@ -143,8 +143,8 @@
 //#define CONFIG_BOOTARGS    	"noinitrd rootfstype=yaffs2 root=/dev/mtdblock3 init=/linuxrc console=ttySAC2,115200"
 
 // For PM debug,  no_console_suspend=1
-//#define CONFIG_BOOTARGS    	"console=ttySAC2,115200 root=/dev/mmcblk0p3 rootfstype=ext3 mini2440=0tb rootdelay=3 init=/linuxrc no_console_suspend=1"
-#define CONFIG_BOOTARGS    	"console=ttySAC2,115200 root=/dev/mmcblk0p3 rootfstype=ext3 mini2440=0tb rootdelay=3 init=/linuxrc"
+//#define CONFIG_BOOTARGS    	"console=ttySAC2,115200 root=/dev/mmcblk0p3 rootfstype=ext3 mez1500=0tb rootdelay=3 init=/linuxrc no_console_suspend=1"
+#define CONFIG_BOOTARGS    	"console=ttySAC2,115200 root=/dev/mmcblk0p3 rootfstype=ext3 mez1500=0tb rootdelay=3 init=/linuxrc"
 #define CONFIG_ETHADDR	        08:08:11:18:12:27
 #define CONFIG_NETMASK          255.255.255.0
 #define CONFIG_IPADDR		10.0.0.111
@@ -264,7 +264,7 @@
 #define CFG_ENV_SIZE		0x20000		/* 128k Total Size of Environment Sector */
 #else
 #define CFG_ENV_IS_IN_FLASH 	1
-#define CFG_MY_ENV_OFFSET 	0X40000
+#define CFG_MY_ENV_OFFSET 	0X60000
 #define CFG_ENV_ADDR		(PHYS_FLASH_1 + CFG_MY_ENV_OFFSET) /* addr of environment */
 #define CFG_ENV_SIZE		0x4000		/* 16k Total Size of Environment Sector */
 #endif
@@ -305,28 +305,28 @@
 #define CFG_NAND_YAFFS_WRITE
 #define CFG_NAND_YAFFS1_NEW_OOB_LAYOUT
 
-#define MTDIDS_DEFAULT		"nand0=mini2440-nand"
-#define MTPDARTS_DEFAULT		"mtdparts=mtdparts=mini2440-nand:256k@0(u-boot),128k(env),5m(kernel),-(root)"
-#define CFG_NAND_DYNPART_MTD_KERNEL_NAME "mini2440-nand"
+#define MTDIDS_DEFAULT		"nand0=mez1500-nand"
+#define MTPDARTS_DEFAULT		"mtdparts=mtdparts=mez1500-nand:512k@0(u-boot),128k(env),5m(kernel),-(root)"
+#define CFG_NAND_DYNPART_MTD_KERNEL_NAME "mez1500-nand"
 #define CONFIG_NAND_DYNPART	1
 
 
 #define CONFIG_EXTRA_ENV_SETTINGS	\
 	"usbtty=cdc_acm\0" \
-	"mtdparts=mtdparts=mini2440-nand:256k@0(u-boot),128k(env),5m(kernel),-(root)\0" \
-	"mini2440=mini2440=0tb\0" \
+	"mtdparts=mtdparts=mez1500-nand:512k@0(u-boot),128k(env),5m(kernel),-(root)\0" \
+	"mez1500=mez1500=0tb\0" \
 	"bootargs_base=console=ttySAC2,115200 noinitrd\0" \
 	"bootargs_init=init=/sbin/init\0" \
 	"root_nand=root=/dev/mtdblock3 rootfstype=jffs2\0" \
 	"root_mmc=root=/dev/mmcblk0p2 rootdelay=2\0" \
 	"root_nfs=/mnt/nfs\0" \
 	"set_root_nfs=setenv root_nfs root=/dev/nfs rw nfsroot=${serverip}:${root_nfs}\0" \
-	"ifconfig_static=run setenv ifconfig ip=${ipaddr}:${serverip}::${netmask}:mini2440:eth0\0" \
+	"ifconfig_static=run setenv ifconfig ip=${ipaddr}:${serverip}::${netmask}:mez1500:eth0\0" \
 	"ifconfig_dhcp=run setenv ifconfig ip=dhcp\0" \
 	"ifconfig=ip=dhcp\0" \
-	"set_bootargs_mmc=setenv bootargs ${bootargs_base} ${bootargs_init} ${mini2440} ${root_mmc}\0" \
-	"set_bootargs_nand=setenv bootargs ${bootargs_base} ${bootargs_init} ${mini2440} ${root_nand}\0" \
-	"set_bootargs_nfs=run set_root_nfs\; setenv bootargs ${bootargs_base} ${bootargs_init} ${mini2440} ${root_nfs} ${ifconfig}\0" \
+	"set_bootargs_mmc=setenv bootargs ${bootargs_base} ${bootargs_init} ${mez1500} ${root_mmc}\0" \
+	"set_bootargs_nand=setenv bootargs ${bootargs_base} ${bootargs_init} ${mez1500} ${root_nand}\0" \
+	"set_bootargs_nfs=run set_root_nfs\; setenv bootargs ${bootargs_base} ${bootargs_init} ${mez1500} ${root_nfs} ${ifconfig}\0" \
 	""	
 
 #endif	/* __CONFIG_H */

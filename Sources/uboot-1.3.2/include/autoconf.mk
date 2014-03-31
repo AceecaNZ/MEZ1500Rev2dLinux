@@ -34,7 +34,7 @@ CONFIG_EXT2=y
 CONFIG_CMD_NAND=y
 CONFIG_USB_DEVICE=y
 CONFIG_S3C2440=y
-CONFIG_BOOTARGS="console=ttySAC2,115200 root=/dev/mmcblk0p3 rootfstype=ext3 mini2440=0tb rootdelay=3 init=/linuxrc"
+CONFIG_BOOTARGS="console=ttySAC2,115200 root=/dev/mmcblk0p3 rootfstype=ext3 mez1500=0tb rootdelay=3 init=/linuxrc"
 CONFIG_MEZ1500=y
 CONFIG_CMD_MEMORY=y
 CONFIG_CMD_RUN=y
@@ -58,7 +58,7 @@ CONFIG_CMD_DHCP=y
 CONFIG_USBD_DFU_XFER_SIZE=4096
 CONFIG_CMD_ECHO=y
 CONFIG_USBD_VENDORID="0x1457"
-CONFIG_EXTRA_ENV_SETTINGS="usbtty=cdc_acm\0mtdparts=mtdparts=mini2440-nand:256k@0(u-boot),128k(env),5m(kernel),-(root)\0mini2440=mini2440=0tb\0bootargs_base=console=ttySAC2,115200 noinitrd\0bootargs_init=init=/sbin/init\0root_nand=root=/dev/mtdblock3 rootfstype=jffs2\0root_mmc=root=/dev/mmcblk0p2 rootdelay=2\0root_nfs=/mnt/nfs\0set_root_nfs=setenv root_nfs root=/dev/nfs rw nfsroot=${serverip}:${root_nfs}\0ifconfig_static=run setenv ifconfig ip=${ipaddr}:${serverip}::${netmask}:mini2440:eth0\0ifconfig_dhcp=run setenv ifconfig ip=dhcp\0ifconfig=ip=dhcp\0set_bootargs_mmc=setenv bootargs ${bootargs_base} ${bootargs_init} ${mini2440} ${root_mmc}\0set_bootargs_nand=setenv bootargs ${bootargs_base} ${bootargs_init} ${mini2440} ${root_nand}\0set_bootargs_nfs=run set_root_nfs\; setenv bootargs ${bootargs_base} ${bootargs_init} ${mini2440} ${root_nfs} ${ifconfig}\0"
+CONFIG_EXTRA_ENV_SETTINGS="usbtty=cdc_acm\0mtdparts=mtdparts=mez1500-nand:512k@0(u-boot),128k(env),5m(kernel),-(root)\0mez1500=mez1500=0tb\0bootargs_base=console=ttySAC2,115200 noinitrd\0bootargs_init=init=/sbin/init\0root_nand=root=/dev/mtdblock3 rootfstype=jffs2\0root_mmc=root=/dev/mmcblk0p2 rootdelay=2\0root_nfs=/mnt/nfs\0set_root_nfs=setenv root_nfs root=/dev/nfs rw nfsroot=${serverip}:${root_nfs}\0ifconfig_static=run setenv ifconfig ip=${ipaddr}:${serverip}::${netmask}:mez1500:eth0\0ifconfig_dhcp=run setenv ifconfig ip=dhcp\0ifconfig=ip=dhcp\0set_bootargs_mmc=setenv bootargs ${bootargs_base} ${bootargs_init} ${mez1500} ${root_mmc}\0set_bootargs_nand=setenv bootargs ${bootargs_base} ${bootargs_init} ${mez1500} ${root_nand}\0set_bootargs_nfs=run set_root_nfs\; setenv bootargs ${bootargs_base} ${bootargs_init} ${mez1500} ${root_nfs} ${ifconfig}\0"
 CONFIG_BAUDRATE=115200
 CONFIG_CMD_AUTOSCRIPT=y
 CONFIG_NETMASK="255.255.255.0"
